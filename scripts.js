@@ -42,7 +42,31 @@ const store = createStore(reducer);
 //uses createStore() to construct a Redux store named store. When creating a store, we must always provide a REDUCER as an arg.
 console.log(store.getState());
 
+//RENDERING STATE IN DOM
+const renderLyrics = () => {
+  //defines a lyricsDisplay const referring to the div w/ '#lyrics'
+  const lyricsDisplay = document.getElementById('lyrics');
+  //if there's already lyrics in this div, remove them 1-by-1 until empty
+  while (lyricsDisplay.firstChild){
+    lyricsDisplay.removeChild(lyricsDisplay.firstChild);
+  }
+  //locates the song lyric @ current arrayPosition
+  const currentLine = store.getState().songLyricsArray[store.getState().arrayPosition];
+  //creates DOM text node containing the song lyric id'd in above line
+  const renderedLine = document.createTextNode(currentLine);
+  //adds text node created in line above to 'lyrics' div in DOM
+  document.getElementById('lyrics').appendChild(renderedLine);
+}
+
+window.onload = function(){
+  renderLyrics();
+}
+
 // CLICK LISTENER
 const userClick = () => {
-  console.log('click');
+  store.dispatch({ type: 'NEXT_LYRIC'} );
+  console.log(store.getState());
 }
+
+//SUBSCRIBE TO REDUX STORE
+store.subscribe(renderLyrics);
