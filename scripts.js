@@ -52,8 +52,30 @@ const lyricChangeReducer = (state = initialState.songsById, action) => {
   }
 }
 
+const songChangeReducer = (state = initialState.currentSongId, action) => {
+  switch (action.type){
+    case 'CHANGE_SONG':
+      return action.newSelectedSongId
+    default:
+      return state;
+  }
+}
 
-//JEST TESTS + SETUP WILL GO HERE
+const rootReducer = this.Redux.combineReducers({
+  currentSongId: songChangeReducer,
+  songsById: lyricChangeReducer
+});
+
+
+//REDUX STORE
+const { createStore } = Redux;
+//Above imports createStore() method from Redux library, it is required.
+const store = createStore(rootReducer);
+//uses createStore() to construct a Redux store named store. When creating a store, we must always provide a REDUCER as an arg, ie rootReducer.
+console.log(store.getState());
+
+
+//JEST TESTS + SETUP WILL GO HERE-- REDUX STORE SHOULD BE ABOVE
 const { expect } = window;
 
 expect(lyricChangeReducer(initialState.songsById, {type: null })).toEqual(initialState.songsById);
@@ -91,14 +113,10 @@ expect(lyricChangeReducer(initialState.songsById, { type: 'RESTART_SONG', curren
     arrayPosition: 0,
   }
 });
-
-
-//REDUX STORE
-const { createStore } = Redux;
-//Above imports createStore() method from Redux library, it is required.
-const store = createStore(lyricChangeReducer);
-//uses createStore() to construct a Redux store named store. When creating a store, we must always provide a REDUCER as an arg.
-console.log(store.getState());
+expect(rootReducer(initialState, { type: null })).toEqual(initialState);
+expect(store.getState().currentSongId).toEqual(songChangeReducer(undefined, { type: null }));
+expect(store.getState().songsById).toEqual(lyricChangeReducer(undefined, { type: null }));
+//3 ROOT REDUCER TESTS ABOVE
 
 //RENDERING STATE IN DOM
 const renderLyrics = () => {
@@ -117,7 +135,8 @@ const renderLyrics = () => {
 }
 
 const renderSongs = () => {
-
+  console.log('renderSongs method successfully fired!');
+  console.log(store.getState());
   // Retrieves songsById state slice from store:
   const songsById = store.getState().songsById;
 
@@ -168,17 +187,33 @@ window.onload = function() {
   renderSongs();
   renderLyrics();
 }
-//
-// // CLICK LISTENER
-// const userClick = () => {
-//   const currentState = store.getState();
-//   if (currentState.arrayPosition === currentState.songLyricsArray.length - 1) {
-//     store.dispatch({ type: 'RESTART_SONG' } );
-//   } else {
-//     store.dispatch({ type: 'NEXT_LYRIC'} );
-//   }
-//   console.log(store.getState());
-// }
-//
-// //SUBSCRIBE TO REDUX STORE
-// store.subscribe(renderLyrics);
+
+// CLICK LISTENER
+const userClick = () => {
+  if (store.getState().songsById.arrayPosition === store.getState().songsById[store.getState().currentSongId].length - 1) {
+    store.dispatch({ type: 'RESTART_SONG',
+                     currentSongId: store.getState().currentSongId });
+  } else {
+    store.dispatch({ type: 'NEXT_LYRIC',
+                     currentSongId: store.getState().currentSongId });
+  }
+}
+
+const selectSong = (newSongId) => {
+  let action;
+  if (store.getState().currentSongId) {
+    action = {
+      type: 'RESTART_SONG',
+      currentSongId: store.getState().currentSongId
+    }
+    store.dispatch(action);
+  }
+  action = {
+    type: 'CHANGE_SONG',
+    newSelectedSongId: newSongId
+  }
+  store.dispatch(action);
+}
+
+//SUBSCRIBE TO REDUX STORE
+store.subscribe(renderLyrics);
